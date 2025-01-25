@@ -10,11 +10,25 @@ const uniqueValidator = require('mongoose-unique-validator')
 
 const port = 3002
 dotenv.config()
-const uri = process.env.MONGODB_URL
-//const uri = 'mongodb://root:senha@mongo:27017/eventosgrupo2'
+//const uri = process.env.grupo2.MONGODB_URL
+const uri = 'mongodb://root:senha@mongo:27017/'
 
 app.use(express.json())
 app.use(cors())
+
+async function conectarAoMongo() {
+    console.log(process.env);
+    await mongoose.connect(uri, {})
+}
+
+app.listen(port, () => {
+    try {
+        conectarAoMongo()
+        console.log(`Servidor rodando na port ${port}`)
+    } catch (error) {
+        console.log("Erro", error)
+    }
+})
 
 /*Schemas*/
 const PointSchema = new mongoose.Schema({
@@ -219,19 +233,5 @@ app.post('/login', async(req, res) => {
     }catch(error){
         console.log(error)
         res.status(409).send("Erro ao fazer login")
-    }
-})
-
-async function conectarAoMongo() {
-    console.log(process.env);
-    await mongoose.connect(uri, {})
-}
-
-app.listen(port, () => {
-    try {
-        conectarAoMongo()
-        console.log(`Servidor rodando na port ${port}`)
-    } catch (error) {
-        console.log("Erro", error)
     }
 })

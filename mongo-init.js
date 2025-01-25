@@ -1,4 +1,4 @@
-db.auth('root', 'example')
+db.auth('root', 'senha')
 
 exemploimagem = db.getSiblingDB('exemploimagem')
 
@@ -36,7 +36,7 @@ eventosgrupo2.createCollection('base')
 
 eventosgrupo2.createUser({
   user: 'root',
-  pwd: 'example',
+  pwd: 'senha',
   roles: [
     {
       role: 'root',

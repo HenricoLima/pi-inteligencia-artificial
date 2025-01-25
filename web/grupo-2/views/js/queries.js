@@ -313,6 +313,3 @@ function exibirAlerta(alerta, classe){
     
     divAlerta.innerHTML = alerta
 }
-
-
- 
