@@ -229,9 +229,68 @@ async function cadastrarUsuario() {
     let telefone = telefoneInput.value
     let cpf = cpfInput.value
 
+    if (!nome || !nomeUsuario || !email || !senha || !telefone || !cpf){
+        exibirAlerta("Preencha todos os campos!", 'alert-danger', 'alert-cadastro')
+        return
+    }
+
+    // Validação do CPF
+    const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
+    if (!cpfRegex.test(cpf)) {
+      exibirAlerta("CPF inválido! Use o formato 000.000.000-00.", 'alert-danger', 'alert-cadastro');
+      return;
+    }
+      // Validação do e-mail
+      const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(email)) {
+        exibirAlerta("E-mail inválido!", 'alert-danger', 'alert-cadastro');
+        return;
+      }
+
+
+      // Validação do telefone
+      const telefoneRegex = /^\(\d{2}\)\d{4,5}-\d{4}$/;
+      if (!telefoneRegex.test(telefone)) {
+        exibirAlerta("Telefone inválido! Use o formato (00) 00000-0000.", 'alert-danger', 'alert-cadastro');
+        return;
+      }
+
+      // Validação da senha (mínimo 8 caracteres, ao menos 1 letra e 1 número)
+      const senhaRegex = /(?=^.{8,}$)((?=.*\d)(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/;
+      if (!senhaRegex.test(senha)) {
+        exibirAlerta("Senha inválida!", 'alert-danger', 'alert-cadastro');
+        return;
+      }
+
     try {
         const cadastroEndpoint = '/cadastro'
         const URLCompleta = `${protocolo}${baseURL}${cadastroEndpoint}`
+
+        try {
+            const usuarioCpf = (await axios.get(`${protocolo}${baseURL}/usuario-cpf/${cpf}`)).data
+            if (usuarioCpf[0].cpf){
+                exibirAlerta('CPF já cadastrado!', 'alert-danger', 'alert-cadastro')
+                return
+            }
+        } catch {}
+
+        try {
+            const usuarioEmail = (await axios.get(`${protocolo}${baseURL}/usuario-email/${email}`)).data
+            console.log (usuarioEmail[0].email)
+            if (usuarioEmail[0].email){
+                exibirAlerta('Email já cadastrado', 'alert-danger', 'alert-cadastro')
+                return
+            }
+        } catch {}
+
+        try {
+            const usuarioNomeUsuario = (await axios.get(`${protocolo}${baseURL}/usuario-nome-usuario/${nomeUsuario}`)).data
+            console.log (usuarioNomeUsuario[0].nomeUsuario)
+            if (usuarioNomeUsuario[0].nomeUsuario){
+                exibirAlerta('Esse nome já está em uso, tente outro', 'alert-danger', 'alert-cadastro')
+                return
+            }
+        } catch {}
 
         const usuario = (await axios.post(URLCompleta, {
                     nome,
@@ -244,27 +303,24 @@ async function cadastrarUsuario() {
             )
         ).data
 
-        localStorage.setItem("Usuario",JSON.stringify(usuario))
-        console.log(localStorage.getItem("Usuario"))
-
+        nomeInput.value = ""
         nomeUsuarioInput.value = ""
         senhaInput.value = ""
         emailInput.value = ""
         cpfInput.value = ""
+        telefoneInput.value = ""
 
         console.log(usuario)
-        
+
         const divAlerta = document.getElementById('alert-cadastro')
+        divAlerta.classList.remove('alert-danger')
         divAlerta.classList.add('alert-success')
         divAlerta.style.display = "block"
         divAlerta.innerHTML = "Usuário cadastrado com sucesso!"
         console.log(divAlerta)
     }
     catch (error) {
-        const divAlerta = document.getElementById('alert-cadastro')
-        divAlerta.classList.add('alert-danger')
-        divAlerta.style.display = "block"
-        divAlerta.innerHTML = "Ocorreu um erro ao cadastrar usuário"
+        exibirAlerta('Ocorreu um erro ao cadastrar usuário', 'alert-danger', 'alert-cadastro')
         console.log(error)
     }
 }
@@ -275,6 +331,11 @@ const fazerLogin = async () => {
 
     let email = emailLoginInput.value
     let senha = senhaLoginInput.value
+
+    if (!email || !senha){
+        exibirAlerta("Preencha todos os campos!", 'alert-danger', 'alert-login')
+        return
+    }
 
     try {
         const loginEndpoint = '/login'
@@ -296,20 +357,13 @@ const fazerLogin = async () => {
 
         console.log(divAlerta)
     }catch (error) {
-        const divAlerta = document.getElementById('alert-login')
-        divAlerta.classList.add('alert-danger')
-        divAlerta.style.display = "block"
-        divAlerta.innerHTML = "Ocorreu um erro ao fazer login"
-        console.log(error)
+        exibirAlerta(error.response.data.mensagem, 'alert-danger', 'alert-login')
     }
 }
 
-function exibirAlerta(alerta, classe){
-    let divAlerta = document.getElementById('alert')
-
-    console.log(divAlerta)
+function exibirAlerta(alerta, classe, div){
+    let divAlerta = document.getElementById(div)
     divAlerta.style.display = "block"
     divAlerta.classList.add(classe)
-    
     divAlerta.innerHTML = alerta
 }

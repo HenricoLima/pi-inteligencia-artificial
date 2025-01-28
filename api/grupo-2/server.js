@@ -148,6 +148,45 @@ app.get('/usuario/:id', async(req, res) => {
     }
 })
 
+app.get('/usuario-cpf/:cpf', async(req, res) => {
+    console.log(req.params.cpf)
+    try {
+        const usuario = await Usuario.find({cpf: `${req.params.cpf}`})
+        if (!usuario) {
+            return res.status(404).send("Usuario não encontrado");
+        }
+        return res.status(201).json(usuario)
+    } catch (error){
+        res.status(500).send(error)
+    }
+})
+
+app.get('/usuario-nome-usuario/:nome', async(req, res) => {
+    console.log(req.params.nome)
+    try {
+        const usuario = await Usuario.find({nomeUsuario: `${req.params.nome}`})
+        if (!usuario) {
+            return res.status(404).send("Usuario não encontrado");
+        }
+        return res.status(201).json(usuario)
+    } catch (error){
+        res.status(500).send(error)
+    }
+})
+
+app.get('/usuario-email/:email', async(req, res) => {
+    console.log(req.params.email)
+    try {
+        const usuario = await Usuario.find({email: `${req.params.email}`})
+        if (!usuario) {
+            return res.status(404).send("Usuario não encontrado");
+        }
+        return res.status(201).json(usuario)
+    } catch (error){
+        res.status(500).send(error)
+    }
+})
+
 app.post('/evento', async(req, res) => {
     const nome = req.body.nome
     const descricao = req.body.descricao
