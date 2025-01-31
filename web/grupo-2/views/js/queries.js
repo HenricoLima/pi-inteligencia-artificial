@@ -2,10 +2,10 @@ const protocolo = 'http://'
 const baseURL = 'localhost:3002'
 
 async function cadastrarEvento() {
+    alert("inicio do método no service")
     //pega os inputs que contém os valores que o usuário digitou
     let nomeInput = document.querySelector('#nomeInput')
     let descricaoInput = document.querySelector('#descricaoInput')
-    let urlBannerInput = document.querySelector('#urlBannerInput')
     let dataInicioInput = document.querySelector('#dataInicioInput')
     let dataFimInput = document.querySelector('#dataFimInput')
     let horarioInicioInput = document.querySelector('#horarioInicioInput')
@@ -20,11 +20,10 @@ async function cadastrarEvento() {
     let cepInput = document.querySelector('#cepInput')
     let complementoInput = document.querySelector('#complementoInput')
     let categoriaInput = document.querySelector('#categoriaInput')
-
+    alert("pegou os valores")
     //pega os valores digitados pelo usuário
     let nome = nomeInput.value
     let descricao = descricaoInput.value
-    let urlBanner = urlBannerInput.value
     let dataInicio = dataInicioInput.value
     let dataFim = dataFimInput.value
     let horarioInicio = horarioInicioInput.value
@@ -49,27 +48,11 @@ async function cadastrarEvento() {
         nome: categoriaInput.value,
         descricao: ""
     }
-
+    alert("criou objetos")
     if (!nome || !descricao || !dataInicio || !horarioInicio || !horarioFim || !endereco.bairro || !endereco.cep || !endereco.estado || !endereco.cidade || !endereco.numero || !endereco.rua){
         alert("Preencha os campos obrigatórios!")
         return 
     }
-    //limpa os campos que o usuário digitou
-    nomeInput.value = ""
-    descricaoInput.value = ""
-    urlBannerInput.value = ""
-    dataInicioInput.value = ""
-    dataFimInput.value = ""
-    horarioInicioInput.value = ""
-    horarioFimInput.value = ""
-    valorInput.value = ""
-    urlIngressoInput.value = ""
-    ruaInput.value = ""
-    numeroInput.value = ""
-    bairroInput.value = ""
-    estadoInput.value = ""
-    cepInput.value = ""
-    complementoInput.value = ""
 
     const usuario = JSON.parse(localStorage.getItem("Usuario"))
     console.log(usuario._id)
@@ -77,17 +60,17 @@ async function cadastrarEvento() {
         alert("Faça login antes de cadastrar um evento!")
         return
     }
-
+    alert("fez validações")
     try{
         //envia os dados ao servidor (back end)
         const eventosEndpoint = '/evento'
         const URLCompleta = `${protocolo}${baseURL}${eventosEndpoint}`
-
+        alert("iniciou o cadastro no banco")
         const eventos = (await axios.post(URLCompleta, {
                     nome,
                     descricao,
                     usuario,
-                    urlBanner,
+                    imgBanner,
                     dataInicio,
                     dataFim,
                     horarioInicio,
@@ -98,6 +81,24 @@ async function cadastrarEvento() {
                 }
             )
         ).data
+        alert("salvou o evento")
+        //limpa os campos que o usuário digitou
+        nomeInput.value = ""
+        descricaoInput.value = ""
+        //imgBannerInput.value = ""
+        dataInicioInput.value = ""
+        dataFimInput.value = ""
+        horarioInicioInput.value = ""
+        horarioFimInput.value = ""
+        valorInput.value = ""
+        urlIngressoInput.value = ""
+        ruaInput.value = ""
+        numeroInput.value = ""
+        bairroInput.value = ""
+        estadoInput.value = ""
+        cepInput.value = ""
+        complementoInput.value = ""
+
         console.log(eventos)
         const divAlerta = document.getElementById('alert-evento')
         divAlerta.classList.add('alert-success')
@@ -183,8 +184,8 @@ async function carregarEvento(id){
     const ingresso = document.querySelector('.ticket-value')
     if(evento.ingresso.valor){
         ingresso.innerHTML = "R$" + evento.ingresso.valor + ",00"
-    }else{
-        ingresso.innerHTML = "R$0,00"
+    }else if(evento.ingresso.valor == 0){
+        ingresso.innerHTML = "GRÁTIS"
     }
 
     const datahora = document.querySelector('.event-date-time')

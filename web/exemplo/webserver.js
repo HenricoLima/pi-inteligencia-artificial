@@ -15,10 +15,9 @@ app.get('/', (req, res) => {
             console.log(err);
         }
         let retorno = [];
-        console.log(data.data)
+        //console.log(data.data)
         let newdata = data.data;
         newdata.forEach(function(image) {
-//            const buffer = Buffer.from(image.img.data, "base64");
             var item = {
                 name: image.name,
                 desc: image.desc,

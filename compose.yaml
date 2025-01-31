@@ -64,6 +64,7 @@ services:
       - mongo-express
     volumes:
       - ./api/grupo-2:/app
+      - ./api/grupo-2/uploads:/app/uploads
     environment:
       - MONGODB_URL=${MONGODB_URL:-mongodb://root:senha@mongo:27017/}
 

@@ -1,9 +1,12 @@
 const express = require('express')
-
+const app = express()
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const fs = require('fs')
+const path = require('path')
+app.set("view engine", "ejs");
 const cors = require('cors');
 const dotenv = require('dotenv');
-const mongoose = require('mongoose');
-const app = express()
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const uniqueValidator = require('mongoose-unique-validator')
@@ -12,7 +15,8 @@ const port = 3002
 dotenv.config()
 //const uri = process.env.grupo2.MONGODB_URL
 const uri = 'mongodb://root:senha@mongo:27017/'
-
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
 app.use(express.json())
 app.use(cors())
 
@@ -29,6 +33,19 @@ app.listen(port, () => {
         console.log("Erro", error)
     }
 })
+const multer = require('multer');
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads')
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.fieldname + '-' + Date.now())
+    }
+});
+
+var upload = multer({ storage: storage });
+
 
 /*Schemas*/
 const PointSchema = new mongoose.Schema({
@@ -83,6 +100,16 @@ const usuarioSchema = new mongoose.Schema({
 usuarioSchema.plugin(uniqueValidator)
 const Usuario = new mongoose.model('Usuario', usuarioSchema)
 
+const imageSchema = new mongoose.Schema({
+    name: String,
+    desc: String,
+    img:
+    {
+        data: Buffer,
+        contentType: String
+    }
+});
+
 const Evento = new mongoose.model('Evento', mongoose.Schema({
     nome: String,
     descricao: String,
@@ -90,7 +117,7 @@ const Evento = new mongoose.model('Evento', mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Usuario'  
     },
-    url_banner: String,
+    imgBanner: String,
     dataInicio: String,
     dataFim: String,
     horarioInicio: String,
@@ -187,11 +214,50 @@ app.get('/usuario-email/:email', async(req, res) => {
     }
 })
 
-app.post('/evento', async(req, res) => {
+app.post('/evento', upload.single('image'), async(req, res) => {
+    
+    let obj = {img: {
+            data: fs.readFileSync(path.join(__dirname + '/uploads/' + req.file.filename)),
+            contentType: 'image/png'
+        }
+    }
+    console.log("obj imagem criado")
+
+    let imgSalva
+    imageSchema.create(obj).then ((err, item) => {
+        if (err) {
+            console.log(err);
+        } else {
+            console.log(item)
+            imgSalva = item
+        }
+    });
+    imageSchema.find({_id: imgSalva._id})
+        .then((data, err)=>{
+            if(err){
+                console.log(err);
+            }
+            let retorno = [];
+            data.forEach(function(image) {
+                var item = {
+                    name: image.name,
+                    desc: image.desc,
+                    img: {
+                        data: image.img.data.toString('base64'),
+                        contentType: image.img.contentType
+                    }
+                }
+                retorno.push(item)
+            })
+            console.log(JSON.stringify(retorno))
+            res.setHeader('Content-Type', 'application/json');
+            res.send(JSON.stringify(retorno))
+    //        res.render('imagepage',{items: data})
+    })
+    
     const nome = req.body.nome
     const descricao = req.body.descricao
     const usuario = req.body.usuario
-    const banner = req.body.banner
     const dataInicio = req.body.dataInicio
     const dataFim = req.body.dataFim
     const horarioInicio = req.body.horarioInicio

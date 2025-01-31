@@ -45,7 +45,7 @@ app.get('/', (req, res) => {
             }
             retorno.push(item)
         })
-        console.log(JSON.stringify(retorno))
+        //console.log(JSON.stringify(retorno))
         res.setHeader('Content-Type', 'application/json');
         res.send(JSON.stringify(retorno))
 //        res.render('imagepage',{items: data})
