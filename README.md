@@ -15,6 +15,15 @@ Atenção:
 No projeto foi utilizado uma IA para reconhecimento de imagem, para ajudar na identificação de imagens adequadas para serem exibidas no site.
 Nesse site é possível fazer cadastro de usuário, cadastro de evento, cadastro de imagem com reconhecimento de IA, ver os eventos cadastrados na página inicial (index.html), e vizualização de detalhes de um evento.
 
+O site está disponível no seguinte URL http://localhost:8002, para usar todas as funcionalidades siga os seguites passos:
+- clique no botão de "cadastre-se" no canto superior direito e preencha conforme é requisitado
+- Em seguida faça o Login com o usuário cadastrado, para isso clique em "Entrar" que se localiza ao lado do botão de "cadastre-se"
+- Agora é possível fazer cadastro de eventos que serão exibidos no site, clicando em "crie seu evento" no lado direto do menu você será redirecionado para um formulário de cadastro de evento
+- Ao completar o cadastro do evento, será redirecionado para a página principal e já será possível ver o evento cadastrado na lista de eventos na seção "Eventos em São Paulo"
+- Para vizualizar mais detalhes do evento clique no evento cadastrado.
+
+OBS: A integração com IA funcionou, mas não consegui exibir o resultado no site
+
 Os projetos foram convertidos para containers dockers. Há um container para cada servidor web e para cada api. Para isso, foram isolados os ambientes api e web que se encontram em duas pastas no repositório. Dentro delas, há uma pasta grupo-x para cada grupo. 
 
 
