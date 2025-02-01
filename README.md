@@ -12,6 +12,9 @@ Atenção:
 
 # Contextualização:
 
+No projeto foi utilizado uma IA para reconhecimento de imagem, para ajudar na identificação de imagens adequadas para serem exibidas no site.
+Nesse site é possível fazer cadastro de usuário, cadastro de evento, cadastro de imagem com reconhecimento de IA, ver os eventos cadastrados na página inicial (index.html), e vizualização de detalhes de um evento.
+
 Os projetos foram convertidos para containers dockers. Há um container para cada servidor web e para cada api. Para isso, foram isolados os ambientes api e web que se encontram em duas pastas no repositório. Dentro delas, há uma pasta grupo-x para cada grupo. 
 
 
