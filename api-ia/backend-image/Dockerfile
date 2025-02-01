@@ -1,30 +1,19 @@
-# Etapa 1: Copiar assets do Swagger UI
 FROM swaggerapi/swagger-ui:v5.9.1 AS swagger-ui
+FROM python:3.10
 
-# Etapa 2: Configuração do ambiente Python
-FROM python:3.10-slim AS base
+WORKDIR /images
 
-# Diretório de trabalho no container
-WORKDIR /app
+COPY . .
+COPY --from=swagger-ui /usr/share/nginx/html/swagger-ui.css swagger-ui-assets/swagger-ui.css
+COPY --from=swagger-ui /usr/share/nginx/html/swagger-ui-bundle.js swagger-ui-assets/swagger-ui-bundle.js
 
-# Copiar dependências do projeto
-COPY ./requirements.txt /app/requirements.txt
+COPY ./requirements.txt /images/requirements.txt
 
-# Instalar dependências do Python
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r /app/requirements.txt
+RUN pip install --no-cache-dir --upgrade -r /images/requirements.txt 
 
-# Copiar assets do Swagger UI
-COPY --from=swagger-ui /usr/share/nginx/html/swagger-ui.css /app/swagger-ui-assets/swagger-ui.css
-COPY --from=swagger-ui /usr/share/nginx/html/swagger-ui-bundle.js /app/swagger-ui-assets/swagger-ui-bundle.js
+RUN python3 -m pip install tf-nightly
+RUN python3 -m pip install keras
 
-# Copiar o restante do código do projeto
-COPY . /app
-
-# Definir o PYTHONPATH para garantir que o módulo seja encontrado
-ENV PYTHONPATH="/app"
-
-# Expor a porta
 EXPOSE 9001
 
 CMD gunicorn --bind 0.0.0.0:9001 --workers 1 --timeout 0 webservice:app -k uvicorn.workers.UvicornWorker

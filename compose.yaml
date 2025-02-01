@@ -29,13 +29,13 @@ services:
       ME_CONFIG_MONGODB_ENABLE_ADMIN: true
       ME_CONFIG_MONGODB_SERVER: mongo
 
-  exemplo-1-service:
-    build: ./web/exemplo
-    container_name: exemplo-1-container
-    ports:
-      - "8000:8080"
-    volumes:
-      - ./web/exemplo:/app
+  #exemplo-1-service:
+  #  build: ./web/exemplo
+  #  container_name: exemplo-1-container
+  #  ports:
+  #    - "8000:8080"
+  #  volumes:
+  #    - ./web/exemplo:/app
 
   grupo-2-service:
     build: ./web/grupo-2
@@ -45,19 +45,19 @@ services:
     volumes:
       - ./web/grupo-2:/app
 
-  exemplo-1-api:
-    build: ./api/exemplo
-    container_name: exemplo-1-api-container
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./api/exemplo:/app
-      - ./api/exemplo/mongodata:/data/db
-      - ./api/exemplo/uploads:/app/uploads
-    env_file:
-      - ./.env.exemplo
-    environment:
-      - MONGODB_URL=${MONGODB_URL:-mongodb://root:senha@mongo:27017/}
+  #exemplo-1-api:
+  #  build: ./api/exemplo
+  #  container_name: exemplo-1-api-container
+  #  ports:
+  #    - "3000:3000"
+  #  volumes:
+  #    - ./api/exemplo:/app
+  #    - ./api/exemplo/mongodata:/data/db
+  #    - ./api/exemplo/uploads:/app/uploads
+  #  env_file:
+  #    - ./.env.exemplo
+  #  environment:
+  #    - MONGODB_URL=${MONGODB_URL:-mongodb://root:senha@mongo:27017/}
 
   grupo-2-api:
     build: ./api/grupo-2
@@ -67,6 +67,7 @@ services:
     depends_on:
       - mongo
       - mongo-express
+      - backend-image
     volumes:
       - ./api/grupo-2:/app
       - ./api/grupo-2/uploads:/app/uploads
@@ -89,24 +90,24 @@ services:
     volumes:
       - ./api-ia/backend-image/images:/images
 
-  backend-files:
-    build:
-      context: api-ia/backend-files
-      dockerfile: Dockerfile
-    ports:
-      - 9000:9000
-    develop:
-      watch:
-      - action: sync
-        path: ./api-ia/backend-files/app/webservice.py
-        target: /app/webservice.py
-    volumes:
-      - /app
+  #backend-files:
+  #  build:
+  #    context: api-ia/backend-files
+  #    dockerfile: Dockerfile
+  #  ports:
+  #    - 9000:9000
+  #  develop:
+  #    watch:
+  #    - action: sync
+  #      path: ./api-ia/backend-files/app/webservice.py
+  #      target: /app/webservice.py
+  #  volumes:
+  #    - /app
 
-  whisper-webservice:
-    ports:
-      - '9002:9000'
-    environment:
-      - ASR_MODEL=base
-      - ASR_ENGINE=openai_whisper
-    image: 'onerahmet/openai-whisper-asr-webservice:latest'
+  #whisper-webservice:
+  #  ports:
+  #    - '9002:9000'
+  #  environment:
+  #    - ASR_MODEL=base
+  #    - ASR_ENGINE=openai_whisper
+  #  image: 'onerahmet/openai-whisper-asr-webservice:latest'

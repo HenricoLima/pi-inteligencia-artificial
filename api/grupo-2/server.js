@@ -1,4 +1,6 @@
 const express = require('express')
+const axios = require('axios')
+const FormData = require('form-data');
 const app = express()
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
@@ -33,18 +35,40 @@ app.listen(port, () => {
         console.log("Erro", error)
     }
 })
-const multer = require('multer');
 
-const storage = multer.diskStorage({
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
+
+var multer = require('multer');
+
+var storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads')
+        cb(null, 'uploads/');
     },
     filename: (req, file, cb) => {
-        cb(null, file.fieldname + '-' + Date.now())
+        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
     }
 });
 
-var upload = multer({ storage: storage });
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 100000000 }, // 100MB file size limit
+    fileFilter: function(req, file, cb) {
+        checkFileType(file, cb);
+    }
+}).single('image');
+
+function checkFileType(file, cb) {
+    const filetypes = /jpeg|jpg|png|gif/;
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = filetypes.test(file.mimetype);
+  
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb('Error: Images only! (jpeg, jpg, png, gif)');
+    }
+  }
 
 
 /*Schemas*/
@@ -60,10 +84,10 @@ const PointSchema = new mongoose.Schema({
     }
 });
 
-const Categoria = new mongoose.Schema({ 
+/*const Categoria = new mongoose.Schema({ 
     nome: String,
     descricao: String
-})
+})*/
 
 const usuarioSchema = new mongoose.Schema({
     nomeUsuario: {
@@ -100,7 +124,11 @@ const usuarioSchema = new mongoose.Schema({
 usuarioSchema.plugin(uniqueValidator)
 const Usuario = new mongoose.model('Usuario', usuarioSchema)
 
-const imageSchema = new mongoose.Schema({
+const ImageSchema = new mongoose.Schema({
+    eventoId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Eventos'  
+    },
     name: String,
     desc: String,
     img:
@@ -109,15 +137,16 @@ const imageSchema = new mongoose.Schema({
         contentType: String
     }
 });
+const Image = new mongoose.model('images', ImageSchema)
 
 const Evento = new mongoose.model('Evento', mongoose.Schema({
     nome: String,
     descricao: String,
+    usuario: String,
     usuarioId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Usuario'  
     },
-    imgBanner: String,
     dataInicio: String,
     dataFim: String,
     horarioInicio: String,
@@ -134,12 +163,12 @@ const Evento = new mongoose.model('Evento', mongoose.Schema({
         cep: String,
         complemento: String
     },
+    categoria: String,
     local: {
         type: PointSchema,
         // required: true,
         index: '2dsphere'
     },
-    categoria: Categoria,
     dataCriacao: Date
 }))
 
@@ -214,75 +243,121 @@ app.get('/usuario-email/:email', async(req, res) => {
     }
 })
 
-app.post('/evento', upload.single('image'), async(req, res) => {
-    
-    let obj = {img: {
-            data: fs.readFileSync(path.join(__dirname + '/uploads/' + req.file.filename)),
+  app.get('/', (req, res) => {
+    Image.find({})
+    .then((data, err)=>{
+        if(err){
+            console.log(err);
+        }
+        let retorno = [];
+        data.forEach(function(image) {
+            var item = {
+                name: image.name,
+                desc: image.desc,
+                img: {
+                    data: image.img.data.toString('base64'),
+                    contentType: image.img.contentType
+                }
+            }
+            retorno.push(item)
+        })
+        //console.log(JSON.stringify(retorno))
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify(retorno))
+//        res.render('imagepage',{items: data})
+    })
+});
+
+app.post('/', async(req, res) => {
+    upload(req, res, (err) => { 
+        if (err) {
+            res.send(err);
+        }
+        else {
+            if (!req.file) {
+                return res.status(400).json({ error: 'Nenhum arquivo enviado!' });
+            }
+        
+        salvaArquivo(req,res);
+        res.redirect('http://localhost:8002/')
+        }
+
+    }) 
+});
+async function salvaEvento(req) {
+    try {
+
+        const { usuario, nome, descricao, dataInicio, dataFim, horarioInicio, horarioFim, valor, urlIngresso, rua, numero, bairro, estado, cidade, cep, complemento, select } = req.body;
+        console.log(select)
+        const ingresso = { valor, urlIngresso };
+        const endereco = { rua, numero, bairro, estado, cidade, cep, complemento };
+
+        const evento = new Evento({
+            usuario,
+            nome,
+            descricao,
+            dataInicio,
+            dataFim,
+            horarioInicio,
+            horarioFim,
+            ingresso,
+            endereco,
+            categoria: select
+        });
+        console.log(evento.categoria)
+
+        return await evento.save();
+    } catch (erro) {
+        console.error("Erro ao salvar evento:", erro);
+        throw erro;
+    }
+}
+
+async function salvaArquivo(req,res) {
+    const caminhoImagem = path.join(__dirname + '/uploads/' + req.file.filename)
+
+    const descImagem = await sendImageToAPI(caminhoImagem)
+    const eventoSalvo = await salvaEvento(req)
+    console.log("Evento salvo---" + eventoSalvo + "---evento salvo")
+        
+    const idEvento = eventoSalvo.id
+    var obj = {
+        eventoId: idEvento+"",
+        desc: descImagem,
+        img: {
+            data: fs.readFileSync(caminhoImagem),
             contentType: 'image/png'
         }
     }
-    console.log("obj imagem criado")
-
-    let imgSalva
-    imageSchema.create(obj).then ((err, item) => {
-        if (err) {
-            console.log(err);
-        } else {
-            console.log(item)
-            imgSalva = item
-        }
-    });
-    imageSchema.find({_id: imgSalva._id})
-        .then((data, err)=>{
-            if(err){
-                console.log(err);
-            }
-            let retorno = [];
-            data.forEach(function(image) {
-                var item = {
-                    name: image.name,
-                    desc: image.desc,
-                    img: {
-                        data: image.img.data.toString('base64'),
-                        contentType: image.img.contentType
-                    }
-                }
-                retorno.push(item)
-            })
-            console.log(JSON.stringify(retorno))
-            res.setHeader('Content-Type', 'application/json');
-            res.send(JSON.stringify(retorno))
-    //        res.render('imagepage',{items: data})
-    })
     
-    const nome = req.body.nome
-    const descricao = req.body.descricao
-    const usuario = req.body.usuario
-    const dataInicio = req.body.dataInicio
-    const dataFim = req.body.dataFim
-    const horarioInicio = req.body.horarioInicio
-    const horarioFim = req.body.horarioFim
-    const ingresso = req.body.ingresso
-    const endereco = req.body.endereco
-    const categoria = req.body.categoria
+    Image.create(obj)
+    .then ((result) => {
+    }).catch((err) => {{
 
-    const evento = new Evento({
-        nome: nome,
-        descricao: descricao,
-        usuarioId: usuario._id,
-        banner: banner,
-        dataInicio: dataInicio,
-        dataFim: dataFim,
-        horarioInicio: horarioInicio,
-        horarioFim: horarioFim,
-        ingresso: ingresso,
-        endereco: endereco,
-        categoria: categoria
-    })
+        res.send(err)}
+    });
+}
 
-    const eventoSalvo = await evento.save()
-    res.status(201).json(eventoSalvo)
-})
+async function sendImageToAPI(imagePath) {
+    const formData = new FormData();
+    formData.append('image_file', fs.createReadStream(imagePath)); // Lê a imagem do disco
+    try {
+        console.log("conectando a API de imagem")
+        const result = await axios.post('http://backend-image:9001/imagens', formData, {
+            headers: formData.getHeaders() // Define os cabeçalhos necessários para multipart/form-data
+            
+        },);
+        const highestPrediction = Object.entries(result.data).reduce((max, entry) => {
+            const [label, confidence] = entry;
+            return confidence > max.confidence ? { label, confidence } : max;
+        }, { label: null, confidence: -Infinity });
+        const response = highestPrediction.label
+        console.log(response)
+        return response;
+    } catch(error) {
+        console.log(error)
+    }
+}
 
 app.post('/cadastro', async(req, res) => {
     try {

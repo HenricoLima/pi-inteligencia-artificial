@@ -1,8 +1,7 @@
 const protocolo = 'http://'
 const baseURL = 'localhost:3002'
 
-async function cadastrarEvento() {
-    alert("inicio do método no service")
+function cadastrarEvento() {
     //pega os inputs que contém os valores que o usuário digitou
     let nomeInput = document.querySelector('#nomeInput')
     let descricaoInput = document.querySelector('#descricaoInput')
@@ -20,7 +19,7 @@ async function cadastrarEvento() {
     let cepInput = document.querySelector('#cepInput')
     let complementoInput = document.querySelector('#complementoInput')
     let categoriaInput = document.querySelector('#categoriaInput')
-    alert("pegou os valores")
+
     //pega os valores digitados pelo usuário
     let nome = nomeInput.value
     let descricao = descricaoInput.value
@@ -48,7 +47,7 @@ async function cadastrarEvento() {
         nome: categoriaInput.value,
         descricao: ""
     }
-    alert("criou objetos")
+
     if (!nome || !descricao || !dataInicio || !horarioInicio || !horarioFim || !endereco.bairro || !endereco.cep || !endereco.estado || !endereco.cidade || !endereco.numero || !endereco.rua){
         alert("Preencha os campos obrigatórios!")
         return 
@@ -60,57 +59,14 @@ async function cadastrarEvento() {
         alert("Faça login antes de cadastrar um evento!")
         return
     }
-    alert("fez validações")
-    try{
-        //envia os dados ao servidor (back end)
-        const eventosEndpoint = '/evento'
-        const URLCompleta = `${protocolo}${baseURL}${eventosEndpoint}`
-        alert("iniciou o cadastro no banco")
-        const eventos = (await axios.post(URLCompleta, {
-                    nome,
-                    descricao,
-                    usuario,
-                    imgBanner,
-                    dataInicio,
-                    dataFim,
-                    horarioInicio,
-                    horarioFim,
-                    ingresso,
-                    endereco,
-                    categoria
-                }
-            )
-        ).data
-        alert("salvou o evento")
+
         //limpa os campos que o usuário digitou
-        nomeInput.value = ""
-        descricaoInput.value = ""
-        //imgBannerInput.value = ""
-        dataInicioInput.value = ""
-        dataFimInput.value = ""
-        horarioInicioInput.value = ""
-        horarioFimInput.value = ""
-        valorInput.value = ""
-        urlIngressoInput.value = ""
-        ruaInput.value = ""
-        numeroInput.value = ""
-        bairroInput.value = ""
-        estadoInput.value = ""
-        cepInput.value = ""
-        complementoInput.value = ""
 
         console.log(eventos)
         const divAlerta = document.getElementById('alert-evento')
         divAlerta.classList.add('alert-success')
         divAlerta.style.display = "block"
         divAlerta.innerHTML = "Evento cadastrado com sucesso!"
-    }catch(error){
-        console.log(error)
-        const divAlerta = document.getElementById('alert-evento')
-        divAlerta.classList.add('alert-danger')
-        divAlerta.style.display = "block"
-        divAlerta.innerHTML = "Ocorreu um erro ao cadastrar evento"
-    }
 }
 
 async function buscarEventos(){

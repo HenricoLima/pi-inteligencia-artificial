@@ -84,6 +84,7 @@ app.get('/teste', (req, res) => {
 });
 
 app.post('/', (req, res) => {
+    console.log(req.params)
     upload(req, res, (err) => { 
         if (err) {
             res.send(err);
