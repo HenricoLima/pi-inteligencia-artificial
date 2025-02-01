@@ -69,6 +69,70 @@ function cadastrarEvento() {
         divAlerta.innerHTML = "Evento cadastrado com sucesso!"
 }
 
+async function buscarEventos() {
+    try {
+        const eventosEndpoint = '/eventos';
+        const URLCompleta = `${protocolo}${baseURL}${eventosEndpoint}`;
+        
+        const response = await axios.get(URLCompleta);
+        const eventos = response.data;
+
+        const eventosContainer = document.querySelector('#eventos-list-2');
+
+        // Criando apenas um `.row` para evitar múltiplas criações
+        const row = document.createElement('div');
+        row.classList.add('row', 'eventos-carousel-3');
+        eventosContainer.appendChild(row);
+
+        eventos.forEach(evento => {
+            evento.dataInicio = formatarData(evento.dataInicio);
+            evento.dataFim = formatarData(evento.dataFim);
+            addHtml(evento, row);
+        });
+
+    } catch (error) {
+        console.error("Erro ao buscar eventos:", error);
+    }
+}
+
+// Função para formatar datas corretamente (de "YYYY-MM-DD" para "DD/MM")
+function formatarData(dataISO) {
+    if (!dataISO) return "";  // Verifica se a data é válida
+    const [ano, mes, dia] = dataISO.split('-');
+    return `${dia}/${mes}`;
+}
+
+function addHtml(evento, row) {
+    const eventoHtml = document.createElement('div');
+    eventoHtml.classList.add('col-sm-4', 'evento-card');
+    eventoHtml.dataset.eventoId = evento._id;
+    eventoHtml.dataset.eventoNome = evento.nome;
+
+    eventoHtml.innerHTML = `
+        <div class="card">
+            <img src="img/capa-evento.png" class="card-img-top" alt="Imagem do evento">
+            <div class="card-body">
+                <h5 class="card-title">${evento.nome}</h5>
+                <h6 class="card-subtitle">${evento.dataInicio} - ${evento.horarioInicio}</h6>
+                <p class="card-text">${evento.descricao}</p>
+                <div class="categories">
+                    <span class="card-link">${evento.categoria?.nome || "Sem categoria"}</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    eventoHtml.addEventListener('click', () => {
+        window.location.href = `evento.html?id=${evento._id}`;
+    });
+
+    row.appendChild(eventoHtml);
+}
+
+// Chamar a função ao carregar a página
+document.addEventListener("DOMContentLoaded", buscarEventos);
+
+/*
 async function buscarEventos(){
     const eventosEndpoint = '/eventos'
     const URLCompleta = `${protocolo}${baseURL}${eventosEndpoint}`
@@ -120,13 +184,36 @@ function addHtml(evento){
 
     row.appendChild(eventoHtml)
 }
-
+*/
 async function carregarEvento(id){
     const meses = ["jan","fev","mar","abr","maio","jun","jul","ago","set","out","nov","dez"]
 
     const eventosEndpoint = `/evento/${id}`
     const URLCompletaEvento = `${protocolo}${baseURL}${eventosEndpoint}`
-    const evento = (await axios.get(URLCompletaEvento)).data
+    const evento = (await axios.get(URLCompletaEvento))
+    .then((data, err)=>{
+        if(err){
+            console.log(err);
+        }
+        let retorno = [];
+        //console.log(data.data)
+        let newdata = data.data;
+        newdata.forEach(function(image) {
+            var item = {
+                name: image.name,
+                desc: image.desc,
+                img: {
+                    data: image.img.data,
+                    contentType: image.img.contentType
+                }
+            }
+            console.log(item)
+            retorno.push(item);
+        });
+        console.log(retorno)
+        res.render('imagepage',{items: retorno})
+    });
+
 
     const titulo = document.querySelector('.event-title')
     titulo.innerHTML = evento.nome
@@ -157,7 +244,7 @@ async function carregarEvento(id){
     local.innerHTML = evento.endereco.rua + ", " + evento.endereco.numero + " - " +evento.endereco.bairro + " - " + evento.endereco.estado
 
     const categoria = document.querySelector('.event-categories a')
-    categoria.innerHTML = evento.categoria.nome
+    categoria.innerHTML = evento.categoria
 
     const usuarioEndpoint = `/usuario/${evento.usuarioId}`
     const URLCompletaUsuario = `${protocolo}${baseURL}${usuarioEndpoint}`

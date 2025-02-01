@@ -6,12 +6,13 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const fs = require('fs')
 const path = require('path')
-app.set("view engine", "ejs");
 const cors = require('cors');
 const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const uniqueValidator = require('mongoose-unique-validator')
+require('dotenv').config();
+app.set("view engine", "ejs");
 
 const port = 3002
 dotenv.config()
@@ -174,9 +175,36 @@ const Evento = new mongoose.model('Evento', mongoose.Schema({
 
 /*Requisições*/
 app.get('/eventos', async(req, res) => {
-    const eventos = await Evento.find().sort({ data: -1 }).limit(3)
+    const eventos = await Evento.find().sort({ data: -1 }).limit(9)
     res.status(201).json(eventos)
 })
+
+/*app.get('/imagem-evento/:id', async(req, res) => {
+    try {
+        let retorno = []
+        //console.log(data.data)
+        await Image.find({eventoId: req.params.id}).then((data, err)=>{
+            if(err){
+                console.log(err);
+            }
+            data.forEach(function(image) {
+                var item = {
+                    name: image.name,
+                    desc: image.desc,
+                    img: {
+                        data: image.img.data.toString('base64'),
+                        contentType: image.img.contentType
+                    }
+                }
+                retorno.push(item)
+            })
+        })
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify(retorno))
+    } catch (error){
+        console.log(error)
+    }
+});*/
 
 app.get('/evento/:id', async(req, res) => {
     console.log(req.params.id)
@@ -185,7 +213,31 @@ app.get('/evento/:id', async(req, res) => {
         if (!evento) {
             return res.status(404).send("Evento não encontrado");
         }
-        return res.status(201).json(evento)
+        try {
+            let retorno = []
+            //console.log(data.data)
+            await Image.find({eventoId: req.params.id}).then((data, err)=>{
+                if(err){
+                    console.log(err);
+                }
+                data.forEach(function(image) {
+                    var item = {
+                        name: image.name,
+                        desc: image.desc,
+                        img: {
+                            data: image.img.data.toString('base64'),
+                            contentType: image.img.contentType
+                        }
+                    }
+                    console.log(item)
+                    retorno.push(item)
+                })
+            })
+            res.setHeader('Content-Type', 'application/json');
+            res.send(JSON.stringify(retorno))
+        } catch (error){
+            console.log(error)
+        }
     } catch (error){
         res.status(500).send(error)
     }
